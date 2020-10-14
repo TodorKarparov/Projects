@@ -49,18 +49,6 @@ bool creditCardValidator(std::string cardNumber) {
 	return true;
 }
 
-// int main() {
-// 	if (creditCardValidator("5499740000000008")) {
-// 		std::cout << "VALID" << std::endl;
-// 	} else {
-// 		std::cout << "INVALID" << std::endl;
-// 	}
-
-
-// 	return 0;
-// }
-
-
 TEST_CASE("Card validation") {
 	CHECK(creditCardValidator("4556568491029316"));
 	CHECK(creditCardValidator("4916456293726666"));
