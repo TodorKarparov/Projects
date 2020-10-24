@@ -1,91 +1,141 @@
 //
 // Created by tkk on 19/10/2020.
 //
-
 #include "Quiz.h"
 
 Quiz::Quiz(const std::string& fileName)
 {
-    questionsFile = "./QuizResources/" + fileName;
+	questionsFilePath = "./QuizResources/" + fileName;
 }
 
 Quiz::Quiz(const char* fileName)
 {
-    std::string path("./QuizResources/");
-    questionsFile = path + fileName;
+	std::string path("./QuizResources/");
+	questionsFilePath = path + fileName;
 }
 
-std::string Quiz::getLastLine()
+std::string Quiz::getLastLine() //tested
 {
-    std::ifstream in(questionsFile);
-    std::string line;
-    while (in >> std::ws && std::getline(in, line)) // skip empty lines
-        ;
+	std::ifstream in(questionsFilePath);
+	std::string line;
+	while (in >> std::ws && std::getline(in, line)) // skip empty lines
+		;
 
-    return line;
+	return line;
 }
 
-bool Quiz::fileExists()
+bool Quiz::fileExists(const char *fileName)
 {
-    std::string path = "./QuizResources/";
-    for (const auto & entry : fs::directory_iterator(path))
-    {
-        if (entry.path() == questionsFile)
-        {
-            return true;
-        }
-    }
+	std::string path = "./";
+	bool exists = false;
+	for (const auto& entry : fs::directory_iterator(path))
+	{
+		if (entry.path() == "./QuizResources")
+		{
+			exists = true;
+		}
+	}
 
-    return false;
+	if (!exists)
+	{
+		return false;
+	}
+
+	if (!strcmp(fileName, "")) {
+		return true; //asking for empty file name equals asking if dir exists
+	}
+
+	exists = false;
+
+	path = "./QuizResources";
+	std::string filePath("./QuizResources/");
+	filePath = filePath + fileName;
+	for (const auto& entry : fs::directory_iterator(path))
+	{
+		if (entry.path() == filePath)
+		{
+			exists = true;
+		}
+	}
+
+	return exists;
 }
 
-size_t Quiz::lastQuestionIndex() {
-    if (!fileExists()) {
-        return 0;
-    }
+size_t Quiz::lastQuestionIndex()
+{
+	 if (!fileExists(questionsFileName.c_str()))
+	 {
+	 	return 0;
+	 }
 
-    std::string lastLine = getLastLine();
-    size_t index = 0;
+	std::string lastLine = getLastLine();
+	if (lastLine.empty())
+	{
+		return 0;
+	}
 
-    size_t i;
-    for (i = 0; lastLine[i] != '.'; ++i) {
-        //get the last digit of the index
-    }
+	size_t index = 0;
 
-    //go back before the '.'
-    i--;
+	size_t i;
+	for (i = 0; lastLine[i] != '.'; ++i)
+	{
+		//get the last digit of the index
+	}
 
-    //convert the index to an actual number type size_t
+	//revert one step to not point at '.' position
+	--i;
 
-    for (size_t j = 0; i >= 0; ++j) {
-        index = index + (lastLine[j] - 48) * pow(10, i);
-        --i;
-    }
+	//convert the index to an actual number type size_t
+	for (size_t j = 0; i != SIZE_MAX; ++j)
+	{
+		index = index + (lastLine[j] - 48) * pow(10, i);
+		i--;
+	}
 
-    return index;
+	return index;
 }
 
 bool Quiz::addQuizQuestions()
 {
-    std::fstream quizFile(questionsFile, std::ios::app);
-    if (!quizFile.is_open())
-    {
-        std::cerr << "File not open!";
-        return false;
-    }
+	if (!fileExists(""))
+	{
+		bool success = fs::create_directory("./QuizResources");
+		if (!success)
+		{
 
-    std::string input;
-    std::getline(std::cin, input);
+			return false;
+		}
+	}
 
-    while (!input.empty())
-    {
-        input.push_back('\n'); //add new line after each entry for human readability
-        quizFile.write(input.c_str(), input.size());
-        input.clear();
-        std::getline(std::cin, input);
-    }
+	std::fstream quizFile(questionsFilePath, std::ios::app);
+	if (!quizFile.is_open())
+	{
+		std::cerr << "File not open!";
+		return false;
+	}
 
-    quizFile.close();
+	std::string input;
+	std::getline(std::cin, input);
+	size_t startIndex = lastQuestionIndex() + 1;
+	std::string question = std::to_string(startIndex++);
 
-    return true;
+	while (!input.empty())
+	{
+		question = question.append(".").append(input);
+		question.append("\n"); //add new line after each entry for human readability
+		quizFile << question;
+		input.clear();
+		question.clear();
+		quizFile.clear();
+		std::getline(std::cin, input);
+		question = std::to_string(startIndex++);
+	}
+
+	quizFile.close();
+
+	return true;
+}
+
+bool Quiz::getRandomQuestions(size_t) {
+
 }

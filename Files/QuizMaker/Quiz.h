@@ -14,23 +14,28 @@
 
 namespace fs = std::filesystem;
 
-class Quiz {
+class Quiz
+{
 
-    fs::path questionsFile;
+	fs::path questionsFilePath;
+	std::string questionsFileName;
 
-    std::string getLastLine();
 
-    bool fileExists();
+	std::string getLastLine();
+
+	bool fileExists(const char *);
+
+	size_t lastQuestionIndex();
 
 public:
 
-    Quiz(const std::string& fileName);
+	Quiz(const std::string& fileName);
 
-    Quiz(const char* fileName);
+	Quiz(const char* fileName);
 
-    size_t lastQuestionIndex();
+	bool addQuizQuestions();
 
-    bool addQuizQuestions();
+	bool getRandomQuestions(size_t);
 
 };
 
