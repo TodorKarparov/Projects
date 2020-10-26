@@ -11,6 +11,10 @@
 #include <cstring>
 #include <filesystem>
 #include <cmath>
+#include <vector>
+#include <random>
+#include <unordered_set>
+#include <limits>
 
 namespace fs = std::filesystem;
 
@@ -20,22 +24,27 @@ class Quiz
 	fs::path questionsFilePath;
 	std::string questionsFileName;
 
+	[[nodiscard]] std::string getLastLine() const;
 
-	std::string getLastLine();
+	static bool fileExists(const char*);
 
-	bool fileExists(const char *);
+	static size_t getQuestionIndex(const std::string&);
 
-	size_t lastQuestionIndex();
+	[[nodiscard]] size_t lastQuestionIndex() const;
+
+	static bool removeIndex(std::string&);
+
+	[[nodiscard]] std::string getLine(size_t index) const;
 
 public:
 
-	Quiz(const std::string& fileName);
+	explicit Quiz(const std::string& fileName);
 
-	Quiz(const char* fileName);
+	explicit Quiz(const char* fileName);
 
 	bool addQuizQuestions();
 
-	bool getRandomQuestions(size_t);
+	bool getRandomQuestions(size_t, std::vector<std::string>&);
 
 };
 

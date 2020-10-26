@@ -14,7 +14,7 @@ Quiz::Quiz(const char* fileName)
 	questionsFilePath = path + fileName;
 }
 
-std::string Quiz::getLastLine() //tested
+std::string Quiz::getLastLine() const
 {
 	std::ifstream in(questionsFilePath);
 	std::string line;
@@ -24,7 +24,33 @@ std::string Quiz::getLastLine() //tested
 	return line;
 }
 
-bool Quiz::fileExists(const char *fileName)
+std::string Quiz::getLine(size_t index) const
+{
+	std::fstream file(questionsFilePath);
+	file.seekg(std::ios::beg);
+	for (int i = 0; i < index - 1; ++i)
+	{
+		file.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+	}
+	std::string line;
+	file >> line;
+	return line;
+}
+
+bool Quiz::removeIndex(std::string& line)
+{
+	for (auto i = line.begin(); i != line.end(); i++)
+	{
+		if (*i == '.') {
+			line.erase(line.begin(), i + 1);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool Quiz::fileExists(const char* fileName)
 {
 	std::string path = "./";
 	bool exists = false;
@@ -41,7 +67,8 @@ bool Quiz::fileExists(const char *fileName)
 		return false;
 	}
 
-	if (!strcmp(fileName, "")) {
+	if (!strcmp(fileName, ""))
+	{
 		return true; //asking for empty file name equals asking if dir exists
 	}
 
@@ -61,23 +88,16 @@ bool Quiz::fileExists(const char *fileName)
 	return exists;
 }
 
-size_t Quiz::lastQuestionIndex()
+size_t Quiz::getQuestionIndex(const std::string& line)
 {
-	 if (!fileExists(questionsFileName.c_str()))
-	 {
-	 	return 0;
-	 }
-
-	std::string lastLine = getLastLine();
-	if (lastLine.empty())
+	if (line.empty())
 	{
 		return 0;
 	}
-
 	size_t index = 0;
 
 	size_t i;
-	for (i = 0; lastLine[i] != '.'; ++i)
+	for (i = 0; line[i] != '.'; ++i)
 	{
 		//get the last digit of the index
 	}
@@ -88,11 +108,21 @@ size_t Quiz::lastQuestionIndex()
 	//convert the index to an actual number type size_t
 	for (size_t j = 0; i != SIZE_MAX; ++j)
 	{
-		index = index + (lastLine[j] - 48) * pow(10, i);
+		index = index + (line[j] - 48) * pow(10, i);
 		i--;
 	}
 
 	return index;
+}
+
+size_t Quiz::lastQuestionIndex() const
+{
+	if (!fileExists(questionsFileName.c_str()))
+	{
+		return 0;
+	}
+
+	return getQuestionIndex(getLastLine());
 }
 
 bool Quiz::addQuizQuestions()
@@ -136,6 +166,46 @@ bool Quiz::addQuizQuestions()
 	return true;
 }
 
-bool Quiz::getRandomQuestions(size_t) {
+bool Quiz::getRandomQuestions(size_t N, std::vector<std::string>& questionsList)
+{
+	if (!fileExists(questionsFileName.c_str()))
+	{
+		return false;
+	}
 
+	size_t numberOfQuestions = lastQuestionIndex();
+	if (N > numberOfQuestions)
+	{
+		N = numberOfQuestions;
+	}
+
+	unsigned seed1 = std::chrono::system_clock::now().time_since_epoch().count();
+	std::default_random_engine generator(seed1);
+	std::uniform_int_distribution<size_t> distribution(1, numberOfQuestions);
+	std::unordered_set<size_t> chosenQuestions;
+	size_t question;
+	for (size_t i = 0; i < N; i++)
+	{
+		question = distribution(generator);
+		while (chosenQuestions.contains(question))
+		{
+			question = distribution(generator);
+		}
+		chosenQuestions.insert(question);
+	}
+	std::string line;
+	for (unsigned long chosenQuestion : chosenQuestions)
+	{
+		line = getLine(chosenQuestion);
+		if (removeIndex(line))
+		{
+			questionsList.push_back(line);
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	return true;
 }
